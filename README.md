@@ -25,3 +25,9 @@ EditProfileとCreateSearchを呼び出す
 ## Description
 CallScriptsはSearchに配置された2つのボタンにそれぞれ紐づけされています。  
 ボタンを押すとCreateSearchかEditProfileが呼び出され、シートを編集します。
+
+## Licence
+ご自由に
+
+## Author
+Shota_Y
