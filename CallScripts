@@ -1,0 +1,14 @@
+function createSearch(){
+  // 検索画面作成ボタンが押されたとき
+  var url = "https://script.google.com/macros/s/<CreateSearchScreenのID>/exec"
+  // GETリクエスト
+  var response = UrlFetchApp.fetch(url);
+  var content = response.getContentText("UTF-8");
+}
+
+function createResults(){
+  // 検索ボタンが押されたとき
+  var url = "https://script.google.com/macros/s/<EditProfileのID>/exec";
+  var response = UrlFetchApp.fetch(url);
+  var content = response.getContentText("UTF-8");
+}
