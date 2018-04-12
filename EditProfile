@@ -1,0 +1,136 @@
+//skip変数だけいじればいいと思います
+
+var Sspread = SpreadsheetApp.openById("<検索スプレッド>");
+var DBspread = SpreadsheetApp.openById("<DBスプレッド>");
+var Rspread = SpreadsheetApp.openById("<結果スプレッド>");
+var Fsheet = Rspread.getSheetByName("Format"); //フォーマットシート
+var Rsheet = Rspread.getSheetByName("Results"); //検索結果シート
+var DBsheet = DBspread.getSheetByName("DB"); //データベースシート
+var Ssheet = Sspread.getSheetByName("Search"); //検索ベースシート
+
+var skip = 12; // !!!!!フォーマットに合わせること!!!!!
+
+function doGet() { //main関数
+  var humans = countNum(); //検索項目にマッチする人を抽出
+  mergeCell(humans.length); //人数分セルの結合を行う
+  copyItem(humans); //各々のデータをコピペする
+  return ContentService.createTextOutput("Sucessful");
+}
+
+function mergeCell(n){
+  var Fdat = Fsheet.getDataRange().getValues(); //Fsheetの全セルの値を習得
+  var DBdat = DBsheet.getDataRange().getValues();
+  
+  Rsheet.clear();
+  
+  var range = Fsheet.getDataRange().getMergedRanges(); //Fsheet中の結合セルの取得
+  
+  var rangeToCopy = Fsheet.getRange(1,1,skip,26); //Fsheetの書式スペースを選択
+  
+  for(var ind = 1;ind<n+1;ind++){ //人数分回す
+    var targetToCopy = Rsheet.getRange((ind-1)*skip+1,1); //RSheetの対象範囲を選択
+    rangeToCopy.copyTo(targetToCopy, {formatOnly:true}); //書式をコピー
+  }
+}
+
+function copyItem(humans){
+  //データのペーストを行う
+  
+  var Fdat = Fsheet.getDataRange().getValues(); //Fsheetの全セルの値を習得
+  var DBdat = DBsheet.getDataRange().getValues();
+  var Rdat = [];
+    
+  //DBsheetにおける項目名と列番号の対応付け
+  var dic = [];
+  for(var l=0;l<DBdat.length;l++){
+    dic.push(DBdat[0][l]); //DBsheetの一行目の値を習得し、順番にdic配列に入れる
+    //Ssheet.getRange(l+1,1).setValue(DBdat[0][l]); //検索項目の作成
+  }
+  
+  var targ = 0; //データを入力する人物
+  for(var ind = 1;ind<DBdat.length;ind++){ //人数分回す
+    for(var i=0;i<Fdat.length;i++){
+      var tmp = [];
+      for(var j=0;j<Fdat[0].length;j++){
+        tmp.push("");
+      }
+      Rdat.push(tmp);
+    }
+    if(DBdat[ind][0] != humans[targ]) continue; //検索に一致しない場合はスキップ
+    targ++;
+    for(var r=0;r<Fdat.length;r++){ //Fsheetの行に沿って走査
+      for(var l=0;l<Fdat[0].length;l++){ //Fsheetの列に沿って走査
+        var tmpItem = Fdat[r][l]; //Fsheet内のセル値を習得
+        if(tmpItem[0] == undefined || tmpItem[0] == "") continue; //何も書いてないなら飛ばす
+        if(tmpItem[0] == "#"){ //#から始まっている(項目名)ならDBsheetから個人情報を引っ張ってくる
+          if(tmpItem != "#Photo"){
+            //Rsheet.getRange((targ-1)*skip+r+1,l+1).setValue(DBdat[ind][dic.indexOf(tmpItem.slice(1))]);
+            Rdat[r][l] = DBdat[ind][dic.indexOf(tmpItem.slice(1))];
+            Logger.log(Fdat[r][l]);
+          }else{
+            //Logger.log(DBdat[ind][dic.indexOf(tmpItem.slice(1))]);
+            /*Rsheet.getRange((targ-1)*skip+r+1,l+1).setValue(
+              "=image(\"https://drive.google.com/uc?export=download&id=" +
+              DBdat[ind][dic.indexOf(tmpItem.slice(1))].split('id=')[1] +
+              "\")"
+            );*/
+            Rdat[r][l] = 
+              "=image(\"https://drive.google.com/uc?export=download&id=" +
+              DBdat[ind][dic.indexOf(tmpItem.slice(1))].split('id=')[1] +
+              "\")";
+          }
+          /*
+          Rsheetの値を書き換えている
+          1. tmpItem.shift: tmpItemの先頭文字(#)を削除
+          2. dic.indexOf: 項目名がdic配列の何番目(0スタート)に存在しているかを検索
+          3. DBdat[]: DBの列番号(indより)と行番号(dicより)を指定し、個人情報をペースト
+          ※画像ならimage関数を追加する
+          */
+        }else{ //#から始まっていないなら、そのままコピー
+          //Rsheet.getRange((targ-1)*skip+r+1,l+1).setValue(tmpItem);
+          Rdat[r][l] = tmpItem;
+        }
+        if(tmpItem!="")
+          Rsheet.getRange((targ-1)*skip+r+1,l+1).setBorder(true,true,true,true,true,true,"#000000",SpreadsheetApp.BorderStyle.SOLID); //罫線を引く
+      }
+    }
+    Rsheet.getRange((targ-1)*skip+1,1,Rdat.length,Rdat[0].length).setValues(Rdat);
+  }
+}
+
+function countNum(){
+  //検索条件にマッチする人を記録する
+  
+  var DBdat = DBsheet.getDataRange().getValues();
+  var Sdat = Ssheet.getDataRange().getValues();
+  
+  var humans = []; //結果
+  
+  for(var i=1;i<DBdat.length;i++){ //人数分回す
+    var ok = true; //検索に完全にマッチするか？
+    for(var j=0;j<Sdat.length;j++){ //検索項目分回す
+      if(Sdat[j][1] == undefined || Sdat[j][1] == "") continue; //検索未記入はスキップ
+      Sdat[j][1]+="";
+      if(DBdat[i][j].toUpperCase().indexOf(Sdat[j][1].toUpperCase()) == -1){   
+        ok = false;
+        break;
+      }
+    }
+    if(ok == true){
+      humans.push(DBdat[i][0]); //完全にマッチしたものは名前を残す
+    }
+  }
+  
+  return humans;
+}
+
+function nextCol(now_s, n){
+  //正規表現で結合行を移動
+  var from = now_s.match(/.*(?=:)/)[0];
+  var from_str = from.match(/([^0-9])*/)[0];
+  var from_num = parseInt(from.match(/([0-9])+/)[0])+n;
+  var to = now_s.match(/(?=:).*/)[0].slice(1);
+  var to_str = to.match(/([^0-9])*/)[0];
+  var to_num = parseInt(to.match(/([0-9])+/)[0])+n;
+  return from_str+from_num+":"+to_str+to_num;
+}
