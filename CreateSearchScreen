@@ -1,0 +1,19 @@
+var Sspread = SpreadsheetApp.openById("<検索スプレッド>");
+var DBspread = SpreadsheetApp.openById("<DBスプレッド>");
+var DBsheet = DBspread.getSheetByName("DB"); //データベースシート
+var Ssheet = Sspread.getSheetByName("Search"); //検索ベースシート
+
+function doGet(){ //main関数
+  Ssheet.clear();
+  
+  var DBdat = DBsheet.getDataRange().getValues(); //DBのデータ
+  
+  //DBsheetにおける項目名と列番号の対応付け
+  var dic = [];
+  for(var l=0;l<DBdat.length;l++){
+    if(DBdat[0][l] == undefined) break;
+    Ssheet.getRange(l+1,1).setValue(DBdat[0][l]); //検索項目の作成
+  }
+  
+  return ContentService.createTextOutput("Sucessful");
+}
