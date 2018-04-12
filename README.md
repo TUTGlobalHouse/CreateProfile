@@ -4,22 +4,22 @@ GoogleSpreadsheetようのGAS。別シート(DB)に集めた個人情報から�
 
 ## Sheets
 以下の4つのシートから構成されます。
-*DB
+* DB
 個人情報を集めておく
-*Search
+* Search
 検索画面
-*Result
+* Result
 実際にプロフィールが出来上がる
-*Format
+* Format
 Resultのレイアウトを定義する
 
 ## Scripts
 以下の3つのスクリプトがあります。
-*EditProfile
+* EditProfile
 Resultにプロフィールを作成する
-*CreateSearch
+* CreateSearch
 検索画面を作成する
-*CallScripts(Searchに紐づけされている)
+* CallScripts(Searchに紐づけされている)
 EditProfileとCreateSearchを呼び出す
 
 ## Description
